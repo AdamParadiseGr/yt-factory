@@ -1,0 +1,34 @@
+{
+  "name": "stories",
+  "language": "en-US",
+  "voice_name": "en-US-AndrewNeural-Male",
+  "voice_rate": 0.95,
+  "font_name": "BeVietnamPro-Bold.ttf",
+  "font_size": 64,
+  "aspect": "9:16",
+  "image_style": "storybook illustration, soft painterly colors, warm light, detailed scene, no text, no watermark",
+  "target_seconds": 45,
+  "series_ratio": 0.3,
+  "series_max_episodes": 5,
+  "youtube_channel_id": "",
+  "niche_queries": ["short stories animated", "bedtime story short", "fable storytime"],
+  "localize": ["es", "pt", "hi", "de"],
+  "qc": {"min_seconds": 25, "max_seconds": 75},
+  "genres": [
+    "a short mystery with a clever twist",
+    "an old folk-tale style fable with a moral",
+    "a cozy slice-of-life story with a gentle surprise",
+    "a short science-fiction vignette",
+    "a legend retold about a place, object or animal",
+    "a quiet ghost story that is eerie but not graphic",
+    "an underdog story with a satisfying ending"
+  ],
+  "structures": [
+    "open in the middle of the action, then reveal how we got there",
+    "told as a letter or diary entry",
+    "three short scenes, each raising the stakes",
+    "a question in the first line, answered only in the last line",
+    "a conversation between two characters, narrated",
+    "countdown structure: hours, minutes, seconds"
+  ]
+}

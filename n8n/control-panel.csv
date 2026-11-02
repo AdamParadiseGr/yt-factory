@@ -1,0 +1,3 @@
+channel,enabled,produce_hour_utc,videos_per_run,days,genres,publish_hour_utc,videos_per_day
+kids,TRUE,5,2,"mon,tue,wed,thu,fri,sat,sun",,23,2
+stories,FALSE,6,2,"mon,tue,wed,thu,fri,sat,sun",,0,2

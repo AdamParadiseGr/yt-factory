@@ -1,0 +1,49 @@
+{
+  "name": "kids",
+  "audience": "kids",
+  "made_for_kids": true,
+  "comments": false,
+  "language": "en-US",
+  "voice_name": "en-US-JennyNeural-Female",
+  "voice_rate": 0.9,
+  "font_name": "BeVietnamPro-Bold.ttf",
+  "font_size": 72,
+  "aspect": "9:16",
+  "image_style": "bright friendly children's picture-book illustration, simple rounded shapes, cheerful saturated colors, soft light, cute animal characters, no text, no watermark",
+  "target_seconds": 40,
+  "words_per_second": 2.1,
+  "series_ratio": 0.4,
+  "series_max_episodes": 6,
+  "youtube_channel_id": "",
+  "niche_queries": ["kids story short", "nursery rhyme short", "bedtime story for kids", "learn colors for kids"],
+  "localize": ["es", "pt", "hi", "de"],
+  "qc": {"min_seconds": 25, "max_seconds": 65},
+  "brief": "You write short, gentle, original narrated pieces for a YouTube Shorts channel for children aged 3 to 7. A parent may be listening too.",
+  "rules": [
+    "original characters and plot, never copy or imitate any existing children's character, song or show",
+    "very simple words and short sentences, a warm friendly voice",
+    "a clear small lesson or fun fact, never preachy",
+    "nothing scary, violent, sad without comfort, or unsafe to imitate",
+    "no real people, no brands, no real-world trademarks, no songs or lyrics that exist already",
+    "no stage directions, headings or emojis in the narration",
+    "end calmly or happily"
+  ],
+  "genres": [
+    "a rhyming mini-story about an animal friend who learns a small lesson",
+    "a counting story from one to ten with a different animal or object for each number",
+    "a gentle bedtime mini-story that ends calmly",
+    "an alphabet adventure where each scene shows a word that starts with the same letter",
+    "a simple question about nature answered in kid-friendly words by a friendly animal guide",
+    "a story about sharing, kindness or trying again",
+    "a colors and shapes story where a character discovers something new in every scene",
+    "a daily-routine story (brushing teeth, tidying up, getting dressed) made fun with rhyme"
+  ],
+  "structures": [
+    "a repeating refrain the child can say along",
+    "a question in the first line, answered in the last line",
+    "a counting-up pattern",
+    "call and response: the narrator asks the viewer a question and gives a pause",
+    "three tries before the character succeeds",
+    "a soft lullaby-like rhythm"
+  ]
+}

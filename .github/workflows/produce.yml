@@ -1,0 +1,98 @@
+name: produce
+
+# No cron here on purpose: the n8n "scheduler" workflow starts this one per channel, following the
+# control-panel sheet (hours, days, pause). You can also start it by hand with Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "channel config name in channels/ (without .json)"
+        default: "kids"
+      count:
+        description: "videos to produce"
+        default: "2"
+      genres:
+        description: "optional: genres for this run, separated by |"
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yt-factory
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CHANNEL: ${{ github.event.inputs.channel || 'kids' }}
+      COUNT: ${{ github.event.inputs.count || '2' }}
+      # Pin to a commit/tag once you have a working run, so upstream changes cannot break you.
+      MPT_REF: main
+      # Set repository variable APPROVAL_BUTTONS=1 once the n8n approval workflow is running.
+      APPROVAL_BUTTONS: ${{ vars.APPROVAL_BUTTONS }}
+      GENRES_OVERRIDE: ${{ github.event.inputs.genres }}
+      N8N_LLM_URL: ${{ secrets.N8N_LLM_URL }}
+      N8N_LLM_TOKEN: ${{ secrets.N8N_LLM_TOKEN }}
+      OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
+      GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+      GROQ_API_KEYS: ${{ secrets.GROQ_API_KEYS }}
+      IMAGE_WORKER_URL: ${{ secrets.IMAGE_WORKER_URL }}
+      IMAGE_WORKER_TOKEN: ${{ secrets.IMAGE_WORKER_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Get MoneyPrinterTurbo
+        run: |
+          git clone https://github.com/harry0703/MoneyPrinterTurbo.git MoneyPrinterTurbo
+          git -C MoneyPrinterTurbo checkout "$MPT_REF"
+          pip install -r MoneyPrinterTurbo/requirements.txt
+
+      - name: Plan scripts (LLM, free tiers)
+        run: python scripts/plan.py --channel "$CHANNEL" --count "$COUNT"
+
+      - name: Translate titles
+        run: python scripts/localize.py
+
+      - name: Write MPT config
+        run: python scripts/make_config.py MoneyPrinterTurbo/config.toml
+
+      - name: Render videos
+        working-directory: MoneyPrinterTurbo
+        run: python cli.py --batch-file ../tasks.json --stop-at video > ../summary.json || echo "render exited non-zero"
+
+      - name: Quality check
+        run: python scripts/qc.py || echo "qc crashed, delivering without it"
+
+      - name: Send to Telegram for review
+        run: python scripts/deliver.py
+
+      - name: Keep copies for 14 days (used by the weekly compilation)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ github.run_id }}
+          path: outbox/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Save data files
+        if: always()
+        run: |
+          git config user.name "yt-factory"
+          git config user.email "yt-factory@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || (git commit -m "data: $CHANNEL" && git pull --rebase && git push)
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          python scripts/notify.py "yt-factory: workflow 'produce' failed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

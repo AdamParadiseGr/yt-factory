@@ -1,0 +1,759 @@
+{
+  "name": "yt-factory 1 approval, Drive, commands",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "callback_query",
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "yt-factory-approval",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram yt-factory"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// EDIT these two values after import\nconst REPO = 'YOUR_GITHUB_USER/yt-factory';\nconst OWNER_CHAT = 'YOUR_TELEGRAM_CHAT_ID';\nconst u = $json;\nif (u.callback_query) {\n  const cb = u.callback_query;\n  if (String(cb.message.chat.id) !== OWNER_CHAT) return [];\n  const [action, tid] = (cb.data || '').split(':');\n  return [{ json: { kind: 'button', action, tid, repo: REPO, chat_id: cb.message.chat.id,\n    callback_id: cb.id, file_id: (cb.message.video && cb.message.video.file_id) || '' } }];\n}\nconst msg = u.message || {};\nif (!msg.chat || String(msg.chat.id) !== OWNER_CHAT) return [];\nconst m = (msg.text || '').match(/^\\/(pause|resume)\\s+(\\w+)/i);\nif (m) return [{ json: { kind: 'command', action: m[1].toLowerCase(), channel: m[2].toLowerCase(),\n  repo: REPO, chat_id: msg.chat.id } }];\nreturn [];"
+      },
+      "id": "parse",
+      "name": "Parse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.kind }}",
+              "value2": "command"
+            }
+          ]
+        }
+      },
+      "id": "command",
+      "name": "Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "panel",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "channel": "={{ $json.channel }}",
+            "enabled": "={{ $json.action === 'resume' ? 'TRUE' : 'FALSE' }}"
+          },
+          "matchingColumns": [
+            "channel"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "sheet-toggle",
+      "name": "Pause or resume channel",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        660,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $('Parse').item.json.chat_id, text: 'Канал ' + $('Parse').item.json.channel + (($('Parse').item.json.action === 'pause') ? ': пауза' : ': запущен') }) }}"
+      },
+      "id": "say-command-result",
+      "name": "Say command result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.github.com/repos/{{ $json.repo }}/contents/data/status.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        }
+      },
+      "id": "get-status",
+      "name": "Get status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        520
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "GitHub PAT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Parse').item.json;\nconst f = $input.item.json;\nconst status = JSON.parse(Buffer.from(f.content, 'base64').toString('utf8'));\nconst map = { approve: 'approved', reject: 'rejected', redo: 'redo', published: 'published' };\nconst entry = status[p.tid] || {};\nif (map[p.action]) entry.status = map[p.action];\nstatus[p.tid] = entry;\nconst content = Buffer.from(JSON.stringify(status, null, 1), 'utf8').toString('base64');\nreturn [{ json: { ...p, sha: f.sha, content, entry, title: entry.title || '',\n  channel: entry.channel || 'kids', label: map[p.action] || entry.status || 'pending' } }];"
+      },
+      "id": "update-status",
+      "name": "Update status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "retitle"
+            }
+          ]
+        }
+      },
+      "id": "retitle",
+      "name": "Retitle?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: 'Give 3 alternative YouTube Shorts titles (max 70 chars, intriguing, no clickbait lies) for this video title: ' + $json.title + '. Return JSON: {\"titles\": [..]}' }] }], generationConfig: { responseMimeType: 'application/json', temperature: 1 } }) }}"
+      },
+      "id": "ask-gemini",
+      "name": "Ask Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        380
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "Gemini key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Update status').item.json;\nlet titles = [];\ntry { titles = JSON.parse($json.candidates[0].content.parts[0].text).titles; } catch (e) {}\nreturn [{ json: { ...p, text: titles.length ? 'Варианты заголовка для \"' + p.title + '\":\\n- ' + titles.join('\\n- ')\n  : 'Не удалось получить варианты, попробуйте ещё раз.' } }];"
+      },
+      "id": "format-titles",
+      "name": "Format titles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/{{ $('Update status').item.json.repo }}/contents/data/status.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: 'status: ' + $('Update status').item.json.tid + ' ' + $('Update status').item.json.label, content: $('Update status').item.json.content, sha: $('Update status').item.json.sha }) }}"
+      },
+      "id": "save-status",
+      "name": "Save status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        640
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "GitHub PAT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('Update status').item.json.action }}",
+              "value2": "approve"
+            }
+          ]
+        }
+      },
+      "id": "approve",
+      "name": "Approve?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Update status').item.json.file_id }}",
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "id": "get-video",
+      "name": "Get video from Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1760,
+        560
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram yt-factory"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $('Update status').item.json.tid }}.mp4",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "drive-upload",
+      "name": "Upload to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1980,
+        560
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "5",
+          "name": "Google Drive"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Update status').item.json;\nconst saved = $('Save status').item.json;\nconst status = JSON.parse(Buffer.from(p.content, 'base64').toString('utf8'));\nconst drive_url = $json.id ? 'https://drive.google.com/file/d/' + $json.id + '/view' : '';\nif (drive_url) status[p.tid].drive_url = drive_url;\nconst content = Buffer.from(JSON.stringify(status, null, 1), 'utf8').toString('base64');\nreturn [{ json: { drive_url, content, sha: (saved.content && saved.content.sha) || p.sha } }];"
+      },
+      "id": "add-drive-link",
+      "name": "Add Drive link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/{{ $('Update status').item.json.repo }}/contents/data/status.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: 'drive link: ' + $('Update status').item.json.tid, content: $json.content, sha: $json.sha }) }}"
+      },
+      "id": "save-status-with-drive-link",
+      "name": "Save status with Drive link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        560
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "GitHub PAT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('Update status').item.json.action }}",
+              "value2": "redo"
+            }
+          ]
+        }
+      },
+      "id": "redo",
+      "name": "Redo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $('Update status').item.json.repo }}/actions/workflows/produce.yml/dispatches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ref: 'main', inputs: { channel: $('Update status').item.json.channel, count: '1' } }) }}"
+      },
+      "id": "start-new-render",
+      "name": "Start new render",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        700
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "GitHub PAT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Update status').item.json;\nlet text = 'Статус: ' + p.label + ' - ' + p.title;\nif (p.action === 'retitle') {\n  try { text = $('Format titles').first().json.text; } catch (e) {}\n}\nif (p.action === 'approve') {\n  let url = '';\n  try { url = $('Add Drive link').first().json.drive_url; } catch (e) {}\n  text += url ? '\\nDrive: ' + url : '\\n(в Drive не сохранено: файл остаётся в Telegram и в артефактах запуска)';\n}\nreturn [{ json: { text } }];"
+      },
+      "id": "compose-answer",
+      "name": "Compose answer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "operation": "answerQuery",
+        "queryId": "={{ $('Parse').item.json.callback_id }}",
+        "additionalFields": {
+          "text": "Готово"
+        }
+      },
+      "id": "answer",
+      "name": "Answer button",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2860,
+        500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram yt-factory"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $('Parse').item.json.chat_id, text: $('Compose answer').item.json.text }) }}"
+      },
+      "id": "say-result",
+      "name": "Say result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3080,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Command?": {
+      "main": [
+        [
+          {
+            "node": "Pause or resume channel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause or resume channel": {
+      "main": [
+        [
+          {
+            "node": "Say command result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get status": {
+      "main": [
+        [
+          {
+            "node": "Update status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update status": {
+      "main": [
+        [
+          {
+            "node": "Retitle?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retitle?": {
+      "main": [
+        [
+          {
+            "node": "Ask Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Gemini": {
+      "main": [
+        [
+          {
+            "node": "Format titles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format titles": {
+      "main": [
+        [
+          {
+            "node": "Compose answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save status": {
+      "main": [
+        [
+          {
+            "node": "Approve?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approve?": {
+      "main": [
+        [
+          {
+            "node": "Get video from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get video from Telegram": {
+      "main": [
+        [
+          {
+            "node": "Upload to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Drive": {
+      "main": [
+        [
+          {
+            "node": "Add Drive link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Drive link": {
+      "main": [
+        [
+          {
+            "node": "Save status with Drive link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save status with Drive link": {
+      "main": [
+        [
+          {
+            "node": "Compose answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redo?": {
+      "main": [
+        [
+          {
+            "node": "Start new render",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Compose answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start new render": {
+      "main": [
+        [
+          {
+            "node": "Compose answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose answer": {
+      "main": [
+        [
+          {
+            "node": "Answer button",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer button": {
+      "main": [
+        [
+          {
+            "node": "Say result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

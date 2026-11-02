@@ -1,0 +1,45 @@
+# Render Blueprint for the free web service (sleeps after 15 min idle: needs an external pinger).
+# The filesystem is not persistent, so n8n must use an external Postgres (Neon / Supabase free).
+services:
+  - type: web
+    name: yt-factory-n8n
+    runtime: image
+    image:
+      url: docker.io/n8nio/n8n:latest   # pin an exact version after the first successful start
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: N8N_ENCRYPTION_KEY
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false          # https://<service>.onrender.com/
+      - key: N8N_PROTOCOL
+        value: https
+      - key: N8N_PORT
+        value: "5678"
+      - key: DB_TYPE
+        value: postgresdb
+      - key: DB_POSTGRESDB_HOST
+        sync: false
+      - key: DB_POSTGRESDB_DATABASE
+        sync: false
+      - key: DB_POSTGRESDB_USER
+        sync: false
+      - key: DB_POSTGRESDB_PASSWORD
+        sync: false
+      - key: DB_POSTGRESDB_SSL_ENABLED
+        value: "true"
+      - key: N8N_BLOCK_ENV_ACCESS_IN_NODE
+        value: "false"
+      - key: N8N_LLM_TOKEN
+        sync: false
+      - key: GEMINI_API_KEYS
+        sync: false
+      - key: GROQ_API_KEYS
+        sync: false
+      - key: OPENROUTER_API_KEYS
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: GENERIC_TIMEZONE
+        value: UTC

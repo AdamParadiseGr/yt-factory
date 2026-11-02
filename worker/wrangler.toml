@@ -1,0 +1,8 @@
+name = "yt-factory-images"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[ai]
+binding = "AI"
+
+# Secret (not stored here):  npx wrangler secret put WORKER_TOKEN

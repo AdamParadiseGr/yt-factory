@@ -1,0 +1,46 @@
+name: daily
+
+# Daily: YPP country-list watcher + channel threshold snapshot (report on Mondays).
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yt-factory
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      YT_API_KEY: ${{ secrets.YT_API_KEY }}
+      YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+      YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+      YT_TOKENS: ${{ secrets.YT_TOKENS }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Is Uzbekistan in the official YPP country list?
+        run: python scripts/country_watch.py
+      - name: YPP thresholds
+        run: python scripts/ypp.py || echo "ypp skipped"
+      - name: Save data files
+        run: |
+          git config user.name "yt-factory"
+          git config user.email "yt-factory@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || (git commit -m "data: daily" && git pull --rebase && git push)
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          python scripts/notify.py "yt-factory: workflow 'daily' failed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

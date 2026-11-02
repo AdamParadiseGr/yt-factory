@@ -1,0 +1,71 @@
+name: weekly
+
+# Weekly (Monday 07:00 UTC): stats and best time, niche watch, comment digest, diversity
+# weights for the next week, compilation of approved videos.
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      include_pending:
+        description: "compile not-yet-approved videos too (1 = yes)"
+        default: "0"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: yt-factory
+  cancel-in-progress: false
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+      GROQ_API_KEYS: ${{ secrets.GROQ_API_KEYS }}
+      N8N_LLM_URL: ${{ secrets.N8N_LLM_URL }}
+      N8N_LLM_TOKEN: ${{ secrets.N8N_LLM_TOKEN }}
+      OPENROUTER_API_KEYS: ${{ secrets.OPENROUTER_API_KEYS }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      YT_API_KEY: ${{ secrets.YT_API_KEY }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pillow
+      - name: Publishing time and genre performance
+        run: python scripts/besttime.py || echo "besttime skipped"
+      - name: Niche watch
+        run: python scripts/niche.py || echo "niche skipped"
+      - name: Comment digest
+        run: python scripts/comments.py || echo "comments skipped"
+      - name: Diversity weights
+        run: python scripts/diversity.py || echo "diversity skipped"
+      - name: Weekly compilation
+        run: |
+          if [ "${{ github.event.inputs.include_pending }}" = "1" ]; then FLAG="--include-pending"; fi
+          python scripts/compile.py $FLAG || echo "compile skipped"
+      - name: Keep compilation for 14 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: compilation-${{ github.run_id }}
+          path: compile_out/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Save data files
+        run: |
+          git config user.name "yt-factory"
+          git config user.email "yt-factory@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || (git commit -m "data: weekly" && git pull --rebase && git push)
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          python scripts/notify.py "yt-factory: workflow 'weekly' failed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -1,0 +1,179 @@
+{
+  "name": "yt-factory 2 scheduler (control panel)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "every-hour",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "panel",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "read-panel",
+      "name": "Read panel",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// EDIT these two values after import\nconst REPO = 'YOUR_GITHUB_USER/yt-factory';\nconst OWNER_CHAT = 'YOUR_TELEGRAM_CHAT_ID';\nconst now = new Date();\nconst hour = now.getUTCHours();\nconst dow = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getUTCDay()];\nconst out = [];\nfor (const it of $input.all()) {\n  const r = it.json;\n  if (String(r.enabled).toUpperCase() !== 'TRUE') continue;\n  if (Number(r.produce_hour_utc) !== hour) continue;\n  const days = String(r.days || 'mon,tue,wed,thu,fri,sat,sun').toLowerCase();\n  if (!days.includes(dow)) continue;\n  out.push({ json: { channel: String(r.channel).trim(), count: String(r.videos_per_run || 2),\n    genres: String(r.genres || '').trim(), repo: REPO, chat: OWNER_CHAT } });\n}\nreturn out;"
+      },
+      "id": "due-channels",
+      "name": "Due channels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $json.repo }}/actions/workflows/produce.yml/dispatches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ref: 'main', inputs: { channel: $json.channel, count: $json.count, genres: $json.genres } }) }}"
+      },
+      "id": "start-produce",
+      "name": "Start produce",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "GitHub PAT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $('Due channels').item.json.chat, text: 'Запущена сборка: ' + $('Due channels').item.json.channel + ' x' + $('Due channels').item.json.count }) }}"
+      },
+      "id": "tell-me",
+      "name": "Tell me",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Read panel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read panel": {
+      "main": [
+        [
+          {
+            "node": "Due channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Due channels": {
+      "main": [
+        [
+          {
+            "node": "Start produce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start produce": {
+      "main": [
+        [
+          {
+            "node": "Tell me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,33 @@
+# For an always-on VM (e.g. Oracle Cloud Always Free). Needs a public hostname pointing at the VM
+# (a free DuckDNS subdomain works). Telegram requires HTTPS for webhooks; Caddy gets the certificate.
+# Usage: copy .env.example to .env, fill it in, then: docker compose up -d
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest   # pin an exact version after the first successful start
+    restart: unless-stopped
+    environment:
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://${N8N_HOST}/
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GENERIC_TIMEZONE=UTC
+      - N8N_BASIC_AUTH_ACTIVE=false
+      # needed by the workflows (rotator, reminders): Code nodes read these
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_LLM_TOKEN=${N8N_LLM_TOKEN}
+      - GEMINI_API_KEYS=${GEMINI_API_KEYS}
+      - GROQ_API_KEYS=${GROQ_API_KEYS}
+      - OPENROUTER_API_KEYS=${OPENROUTER_API_KEYS}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    volumes:
+      - n8n_data:/home/node/.n8n
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    command: caddy reverse-proxy --from ${N8N_HOST} --to n8n:5678
+    volumes:
+      - caddy_data:/data
+volumes:
+  n8n_data:
+  caddy_data:

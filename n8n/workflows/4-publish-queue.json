@@ -1,0 +1,176 @@
+{
+  "name": "yt-factory 4 publish reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "every-hour",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "panel",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "read-panel",
+      "name": "Read panel",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.github.com/repos/YOUR_GITHUB_USER/yt-factory/contents/data/status.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        }
+      },
+      "id": "get-status",
+      "name": "Get status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "GitHub PAT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// EDIT these two values after import\nconst REPO = 'YOUR_GITHUB_USER/yt-factory';\nconst OWNER_CHAT = 'YOUR_TELEGRAM_CHAT_ID';\nconst hour = new Date().getUTCHours();\nconst panel = $('Read panel').all().map((i) => i.json);\nconst status = JSON.parse(Buffer.from($input.first().json.content, 'base64').toString('utf8'));\nconst out = [];\nfor (const r of panel) {\n  if (String(r.enabled).toUpperCase() !== 'TRUE') continue;\n  if (Number(r.publish_hour_utc) !== hour) continue;\n  const n = Number(r.videos_per_day || 1);\n  const items = Object.entries(status)\n    .filter(([id, s]) => s.channel === String(r.channel).trim() && s.status === 'approved')\n    .sort((a, b) => (a[1].date || '').localeCompare(b[1].date || '')).slice(0, n);\n  for (const [id, s] of items) {\n    const lines = ['Пора публиковать (' + s.channel + '): ' + s.title, '', 'Описание:', s.description || '', '',\n      'Теги: ' + (s.tags || []).join(', ')];\n    if (s.made_for_kids) lines.push('Аудитория в Studio: Yes, it\\'s made for kids');\n    lines.push('Файл: ' + (s.drive_url || 'в сообщении с роликом в Telegram'));\n    out.push({ json: { tid: id, chat: OWNER_CHAT, text: lines.join('\\n') } });\n  }\n}\nreturn out;"
+      },
+      "id": "videos-to-publish-now",
+      "name": "Videos to publish now",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat, text: $json.text, reply_markup: { inline_keyboard: [[{ text: 'Опубликовано', callback_data: 'published:' + $json.tid }]] } }) }}"
+      },
+      "id": "send-reminder",
+      "name": "Send reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Read panel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read panel": {
+      "main": [
+        [
+          {
+            "node": "Get status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get status": {
+      "main": [
+        [
+          {
+            "node": "Videos to publish now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Videos to publish now": {
+      "main": [
+        [
+          {
+            "node": "Send reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

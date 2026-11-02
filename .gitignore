@@ -1,0 +1,11 @@
+MoneyPrinterTurbo/
+tasks.json
+tasks_meta.json
+summary.json
+config.toml
+__pycache__/
+outbox/
+qc.json
+compile_work/
+compile_out/
+.venv/
