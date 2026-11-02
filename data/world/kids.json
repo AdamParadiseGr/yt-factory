@@ -1,0 +1,26 @@
+{
+ "characters": {
+  "Bramble": {
+   "look": "Bramble the little blue bunny with soft blue fur and floppy ears",
+   "series": "garden-tales-with-bramble"
+  },
+  "Pip": {
+   "look": "Pip the tiny yellow duckling with bright orange feet",
+   "series": "garden-tales-with-bramble"
+  }
+ },
+ "series": [
+  {
+   "id": "garden-tales-with-bramble",
+   "title": "Garden Tales with Bramble",
+   "logline": "Gentle little adventures about sharing and kindness in a sunny garden.",
+   "episodes": [
+    {
+     "n": 1,
+     "title": "Bramble's Big Blue Balloon",
+     "summary": "Bramble the blue bunny finds a red balloon and learns the joy of sharing it with Pip the yellow duckling. Together, they watch it dance in the breeze as a new day begins."
+    }
+   ]
+  }
+ ]
+}

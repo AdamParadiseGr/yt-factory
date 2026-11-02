@@ -1,1 +1,24 @@
-[]
+[
+ {
+  "channel": "kids",
+  "title": "Pip Counts One Two Three Seeds",
+  "genre": "a story about sharing, kindness or trying again",
+  "structure": "a counting-up pattern",
+  "first_line": "Little Pip has one round seed in his beak.",
+  "series": null,
+  "episode": null,
+  "summary": "Pip the little blue bird shares his seeds one by one with his woodland friends, learning that sharing brings happy smiles to everyone.",
+  "date": "2026-11-02"
+ },
+ {
+  "channel": "kids",
+  "title": "Bramble's Big Blue Balloon",
+  "genre": "a story about sharing, kindness or trying again",
+  "structure": "a soft lullaby-like rhythm",
+  "first_line": "Little Bramble the blue bunny found a shiny red balloon floating near the garden gate.",
+  "series": "garden-tales-with-bramble",
+  "episode": 1,
+  "summary": "Bramble the blue bunny finds a red balloon and learns the joy of sharing it with Pip the yellow duckling. Together, they watch it dance in the breeze as a new day begins.",
+  "date": "2026-11-02"
+ }
+]
