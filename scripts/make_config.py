@@ -24,7 +24,7 @@ lines = [
     f"gemini_api_key = {q(gemini_keys[0] if gemini_keys else '')}",
     # MPT's default Gemini model is a Pro preview (paid). Script generation is done by
     # scripts/plan.py, but keep MPT on a free-tier model in case it calls the LLM.
-    f"gemini_model_name = {q(os.environ.get('GEMINI_MODELS', 'gemini-2.5-flash-lite').split(',')[0])}",
+    f"gemini_model_name = {q(os.environ.get('GEMINI_MODELS', 'gemini-3.5-flash-lite').split(',')[0])}",
     'video_source = "openai_image"',
     f"openai_image_base_url = {q(worker_url + '/v1')}",
     f"openai_image_api_keys = [{q(os.environ.get('IMAGE_WORKER_TOKEN', ''))}]",

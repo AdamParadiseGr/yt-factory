@@ -64,7 +64,7 @@ def http(url, body=None, headers=None, timeout=60, method=None, raw=False):
 
 # ---------- LLM: Gemini free tier (key rotation) -> Groq free tier ----------
 GEMINI_MODELS = [m for m in os.environ.get(
-    "GEMINI_MODELS", "gemini-2.5-flash-lite,gemini-2.5-flash").split(",") if m]
+    "GEMINI_MODELS", "gemini-3.5-flash-lite,gemini-3.6-flash").split(",") if m]
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
