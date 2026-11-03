@@ -8,5 +8,38 @@
   "status": "auto_rejected",
   "title": "Bramble's Big Blue Balloon",
   "date": "2026-11-02"
+ },
+ "e170b372-31a2-47fa-99f9-98c00b024672": {
+  "status": "pending",
+  "title": "Barnaby Turtle Slows Down to See",
+  "channel": "kids",
+  "description": "Barnaby the little green turtle learns that moving slowly helps him spot wonderful tiny things in the grass. Join in and say the friendly refrain together! #bedtimestories #kidsanimation #gentlelearning",
+  "tags": [
+   "turtles",
+   "bedtime story",
+   "kids animation",
+   "gentle learning",
+   "animals",
+   "preschool"
+  ],
+  "made_for_kids": true,
+  "date": "2026-11-03"
+ },
+ "e874b444-9a18-4981-84dc-925cfce8baa2": {
+  "status": "pending",
+  "title": "Luna Fox Counts the Evening Stars",
+  "channel": "kids",
+  "description": "Join Luna the little orange fox as she counts glowing evening stars before bedtime. A gentle, sleepy counting story perfect for toddlers and preschoolers. #bedtimestories #kidsbooks #toddlernap",
+  "tags": [
+   "bedtime story",
+   "counting for kids",
+   "gentle sleep",
+   "toddler stories",
+   "cute fox",
+   "kids relaxation",
+   "nighttime"
+  ],
+  "made_for_kids": true,
+  "date": "2026-11-03"
  }
 }

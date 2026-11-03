@@ -1,1 +1,30 @@
-[]
+[
+ {
+  "task_id": "e170b372-31a2-47fa-99f9-98c00b024672",
+  "date": "2026-11-03",
+  "channel": "kids",
+  "title": "Barnaby Turtle Slows Down to See",
+  "genre": "a rhyming mini-story about an animal friend who learns a small lesson",
+  "series": null,
+  "text_model": "gemini-3.5-flash-lite",
+  "image_model": "flux-1-schnell",
+  "voice": "en-US-JennyNeural-Female",
+  "tts": "edge-tts",
+  "assembler": "MoneyPrinterTurbo@main",
+  "synthetic_media": true
+ },
+ {
+  "task_id": "e874b444-9a18-4981-84dc-925cfce8baa2",
+  "date": "2026-11-03",
+  "channel": "kids",
+  "title": "Luna Fox Counts the Evening Stars",
+  "genre": "a gentle bedtime mini-story that ends calmly",
+  "series": null,
+  "text_model": "gemini-3.5-flash-lite",
+  "image_model": "flux-1-schnell",
+  "voice": "en-US-JennyNeural-Female",
+  "tts": "edge-tts",
+  "assembler": "MoneyPrinterTurbo@main",
+  "synthetic_media": true
+ }
+]

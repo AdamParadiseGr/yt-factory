@@ -20,5 +20,27 @@
   "episode": 1,
   "summary": "Bramble the blue bunny finds a red balloon and learns the joy of sharing it with Pip the yellow duckling. Together, they watch it dance in the breeze as a new day begins.",
   "date": "2026-11-02"
+ },
+ {
+  "channel": "kids",
+  "title": "Barnaby Turtle Slows Down to See",
+  "genre": "a rhyming mini-story about an animal friend who learns a small lesson",
+  "structure": "a repeating refrain the child can say along",
+  "first_line": "Meet Barnaby Turtle in the soft green grass.",
+  "series": null,
+  "episode": null,
+  "summary": "Barnaby Turtle learns that rushing makes him stumble, but slowing down helps him notice tiny, wonderful friends in the grass. He enjoys a peaceful, happy day by taking his time.",
+  "date": "2026-11-03"
+ },
+ {
+  "channel": "kids",
+  "title": "Luna Fox Counts the Evening Stars",
+  "genre": "a gentle bedtime mini-story that ends calmly",
+  "structure": "a counting-up pattern",
+  "first_line": "The sun goes down behind the hill.",
+  "series": null,
+  "episode": null,
+  "summary": "Luna the fox counts up to five glowing night elements while taking deep breaths to calm down for sleep.",
+  "date": "2026-11-03"
  }
 ]
