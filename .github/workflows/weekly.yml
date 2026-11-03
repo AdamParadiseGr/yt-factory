@@ -38,6 +38,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - run: pip install pillow
       - name: Publishing time and genre performance
         run: python scripts/besttime.py || echo "besttime skipped"

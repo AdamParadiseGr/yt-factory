@@ -17,11 +17,13 @@ export default {
     if (request.method !== "POST" || !url.pathname.endsWith("/images/generations")) {
       return json({ error: { message: "not found" } }, 404);
     }
-    if (env.WORKER_TOKEN) {
-      const auth = request.headers.get("authorization") || "";
-      if (auth !== `Bearer ${env.WORKER_TOKEN}`) {
-        return json({ error: { message: "unauthorized" } }, 401);
-      }
+    // Fail closed: without a configured token anyone could burn the free daily quota.
+    if (!env.WORKER_TOKEN) {
+      return json({ error: { message: "WORKER_TOKEN is not configured" } }, 503);
+    }
+    const auth = request.headers.get("authorization") || "";
+    if (auth !== `Bearer ${env.WORKER_TOKEN}`) {
+      return json({ error: { message: "unauthorized" } }, 401);
     }
 
     let payload;

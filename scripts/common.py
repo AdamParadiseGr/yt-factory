@@ -65,7 +65,8 @@ def http(url, body=None, headers=None, timeout=60, method=None, raw=False):
 # ---------- LLM: Gemini free tier (key rotation) -> Groq free tier ----------
 GEMINI_MODELS = [m for m in os.environ.get(
     "GEMINI_MODELS", "gemini-3.5-flash-lite,gemini-3.6-flash").split(",") if m]
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODELS = [m for m in os.environ.get(
+    "GROQ_MODELS", "openai/gpt-oss-120b,openai/gpt-oss-20b").split(",") if m]
 
 
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
@@ -110,17 +111,20 @@ def llm(prompt, temperature=1.0):
             except Exception as e:  # noqa: BLE001
                 print(f"gemini {model}: {type(e).__name__}", file=sys.stderr)
     for key in env_list("GROQ_API_KEYS"):
-        body = {"model": GROQ_MODEL, "temperature": temperature,
-                "response_format": {"type": "json_object"},
-                "messages": [{"role": "user", "content": prompt}]}
-        try:
-            data = http("https://api.groq.com/openai/v1/chat/completions", body,
-                        {"authorization": f"Bearer {key}"}, timeout=90)
-            return data["choices"][0]["message"]["content"], GROQ_MODEL
-        except urllib.error.HTTPError as e:
-            print(f"groq: HTTP {e.code}", file=sys.stderr)
-        except Exception as e:  # noqa: BLE001
-            print(f"groq: {type(e).__name__}", file=sys.stderr)
+        for model in GROQ_MODELS:
+            body = {"model": model, "temperature": temperature,
+                    "response_format": {"type": "json_object"},
+                    "messages": [{"role": "user", "content": prompt}]}
+            try:
+                data = http("https://api.groq.com/openai/v1/chat/completions", body,
+                            {"authorization": f"Bearer {key}"}, timeout=90)
+                return data["choices"][0]["message"]["content"], model
+            except urllib.error.HTTPError as e:
+                print(f"groq {model}: HTTP {e.code}", file=sys.stderr)
+                if e.code == 429:
+                    break  # next key
+            except Exception as e:  # noqa: BLE001
+                print(f"groq {model}: {type(e).__name__}", file=sys.stderr)
     for key in env_list("OPENROUTER_API_KEYS"):
         body = {"model": OPENROUTER_MODEL, "temperature": temperature,
                 "messages": [{"role": "user", "content": prompt + "\nReturn only a JSON object."}]}

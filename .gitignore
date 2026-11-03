@@ -9,3 +9,7 @@ qc.json
 compile_work/
 compile_out/
 .venv/
+worker/.wrangler/
+worker/body.json
+worker/out*.json
+node_modules/
