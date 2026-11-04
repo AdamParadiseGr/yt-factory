@@ -42,5 +42,27 @@
   "episode": null,
   "summary": "Luna the fox counts up to five glowing night elements while taking deep breaths to calm down for sleep.",
   "date": "2026-11-03"
+ },
+ {
+  "channel": "kids",
+  "title": "Oliver Owl Finds the Quiet Moon",
+  "genre": "a rhyming mini-story about an animal friend who learns a small lesson",
+  "structure": "a soft lullaby-like rhythm",
+  "first_line": "Little Oliver Owl was wide awake.",
+  "series": null,
+  "episode": null,
+  "summary": "Little Oliver Owl tries to stay awake to catch fireflies, but after a gentle reminder from his mother, he learns to relax and fall asleep.",
+  "date": "2026-11-04"
+ },
+ {
+  "channel": "kids",
+  "title": "Milo Fox Shares a Shiny Red Berry",
+  "genre": "a story about sharing, kindness or trying again",
+  "structure": "a soft lullaby-like rhythm",
+  "first_line": "Once upon a quiet hill, a little fox named Milo found a sweet red berry.",
+  "series": null,
+  "episode": null,
+  "summary": "Milo Fox finds a tasty red berry and happily shares half of it with his hungry friend Pip the mouse.",
+  "date": "2026-11-04"
  }
 ]

@@ -26,5 +26,33 @@
   "tts": "edge-tts",
   "assembler": "MoneyPrinterTurbo@main",
   "synthetic_media": true
+ },
+ {
+  "task_id": "76539d1d-b925-48b7-9396-0a44bf43343d",
+  "date": "2026-11-04",
+  "channel": "kids",
+  "title": "Oliver Owl Finds the Quiet Moon",
+  "genre": "a rhyming mini-story about an animal friend who learns a small lesson",
+  "series": null,
+  "text_model": "gemini-3.5-flash-lite",
+  "image_model": "flux-1-schnell",
+  "voice": "kokoro:af_heart",
+  "tts": "kokoro",
+  "assembler": "MoneyPrinterTurbo@main",
+  "synthetic_media": true
+ },
+ {
+  "task_id": "86e6ca12-1242-48b5-8034-1fbc462c8b5e",
+  "date": "2026-11-04",
+  "channel": "kids",
+  "title": "Milo Fox Shares a Shiny Red Berry",
+  "genre": "a story about sharing, kindness or trying again",
+  "series": null,
+  "text_model": "gemini-3.5-flash-lite",
+  "image_model": "flux-1-schnell",
+  "voice": "kokoro:af_heart",
+  "tts": "kokoro",
+  "assembler": "MoneyPrinterTurbo@main",
+  "synthetic_media": true
  }
 ]
