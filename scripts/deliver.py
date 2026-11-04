@@ -78,7 +78,7 @@ def main():
             prov.append({"task_id": tid, "date": common.today(), "channel": m.get("channel"),
                          "title": m["title"], "genre": m.get("genre"), "series": m.get("series"),
                          "text_model": m.get("text_model"), "image_model": m.get("image_model"),
-                         "voice": m.get("voice"), "tts": "edge-tts",
+                         "voice": m.get("voice"), "tts": "kokoro" if str(m.get("voice", "")).startswith("kokoro:") else "edge-tts",
                          "assembler": "MoneyPrinterTurbo@" + os.environ.get("MPT_REF", "main"),
                          "synthetic_media": True})
             status[tid] = {"status": "pending", "title": m["title"], "channel": m.get("channel"),

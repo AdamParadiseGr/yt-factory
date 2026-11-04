@@ -96,8 +96,9 @@ Return JSON only with keys:
 "script" (the narration text),
 "summary" (2 sentences describing what happens),
 "scenes" (list of 8 to 10 short English visual descriptions of the scenes in order,
-each concrete: who, where, lighting; no text in the image; whenever a recurring
-character appears, repeat their exact look phrase in that scene),
+each concrete: who, where, lighting; no text in the image; ONE main subject per scene
+and a simple background; whenever a recurring character appears, START the scene with their
+exact look phrase, word for word, then the action and place),
 "characters" (list of {{"name","look"}} for every recurring character that appears; may be empty),
 "series_title" and "series_logline" (only for a new series, otherwise empty strings)."""
 
@@ -164,13 +165,16 @@ def main():
         if idea:
             idea_row["used"] = True
         style = ch["image_style"]
+        voice, rate = ch["voice_name"], ch["voice_rate"]
+        if os.environ.get("KOKORO_OK") == "1" and ch.get("kokoro_voice"):
+            voice, rate = "kokoro:" + ch["kokoro_voice"], ch.get("kokoro_rate", 1.0)
         tasks.append({
             "video_subject": title,
             "video_script": script,
             "video_terms": [f"{s.rstrip('.')}, {style}" for s in scenes],
             "video_language": ch["language"],
-            "voice_name": ch["voice_name"],
-            "voice_rate": ch["voice_rate"],
+            "voice_name": voice,
+            "voice_rate": rate,
             "video_source": "openai_image",
             "video_aspect": ch["aspect"],
             "font_name": ch["font_name"],
@@ -181,7 +185,7 @@ def main():
                      "description": item.get("description", ""),
                      "tags": [str(t)[:30] for t in (item.get("tags") or [])][:8], "genre": genre,
                      "structure": structure, "series": series_id, "episode": episode,
-                     "text_model": model, "voice": ch["voice_name"],
+                     "text_model": model, "voice": voice,
                      "image_model": "flux-1-schnell", "date": common.today(),
                      "made_for_kids": bool(ch.get("made_for_kids")), "script": script})
         used.append(title)

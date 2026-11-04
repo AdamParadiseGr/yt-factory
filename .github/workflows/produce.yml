@@ -53,6 +53,19 @@ jobs:
       - name: Install ffmpeg (ffprobe is used by qc.py)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
 
+      - name: Start Kokoro voice server (free, CPU)
+        continue-on-error: true
+        run: |
+          docker run -d --name kokoro -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest
+          for i in $(seq 1 72); do
+            if curl -sf http://127.0.0.1:8880/v1/audio/voices | grep -q af_heart; then
+              echo "KOKORO_OK=1" >> "$GITHUB_ENV"; echo "kokoro ready"; exit 0
+            fi
+            sleep 5
+          done
+          docker logs kokoro 2>&1 | tail -30
+          echo "kokoro did not start; falling back to Edge voice"
+
       - name: Get MoneyPrinterTurbo
         run: |
           git clone https://github.com/harry0703/MoneyPrinterTurbo.git MoneyPrinterTurbo
