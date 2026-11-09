@@ -1,0 +1,22 @@
+{
+ "kids": {
+  "genres": {
+   "a rhyming mini-story about an animal friend who learns a small lesson": 0.438,
+   "a counting story from one to ten with a different animal or object for each number": 1.315,
+   "a gentle bedtime mini-story that ends calmly": 0.658,
+   "an alphabet adventure where each scene shows a word that starts with the same letter": 1.315,
+   "a simple question about nature answered in kid-friendly words by a friendly animal guide": 1.315,
+   "a story about sharing, kindness or trying again": 0.329,
+   "a colors and shapes story where a character discovers something new in every scene": 1.315,
+   "a daily-routine story (brushing teeth, tidying up, getting dressed) made fun with rhyme": 1.315
+  },
+  "structures": {
+   "a repeating refrain the child can say along": 0.735,
+   "a question in the first line, answered in the last line": 1.469,
+   "a counting-up pattern": 0.49,
+   "call and response: the narrator asks the viewer a question and gives a pause": 1.469,
+   "three tries before the character succeeds": 1.469,
+   "a soft lullaby-like rhythm": 0.367
+  }
+ }
+}
